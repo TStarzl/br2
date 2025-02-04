@@ -3,7 +3,6 @@ import React from 'react';
 interface BathroomCardProps {
   name: string;
   distance?: string;
-  // Make rating optional (the '?' means it can be undefined)
   rating?: number;
   hasWheelchairAccess: boolean;
   hasChangingTables: boolean;
@@ -26,7 +25,6 @@ export function BathroomCard({
         <h3 className="text-lg font-semibold text-primary">{name}</h3>
         <div className="flex items-center">
           <span className="text-yellow-400">★</span>
-          {/* Fallback to 'N/A' if rating is undefined */}
           <span className="ml-1 text-sm">
             {typeof rating === 'number' ? rating.toFixed(1) : 'N/A'}
           </span>
