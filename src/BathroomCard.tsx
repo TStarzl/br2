@@ -1,4 +1,6 @@
+// src/components/ui/BathroomCard.tsx
 import React from 'react';
+import { Navigation } from 'lucide-react';
 
 interface BathroomCardProps {
   name: string;
@@ -8,6 +10,7 @@ interface BathroomCardProps {
   hasChangingTables: boolean;
   lastReviewed: string;
   description: string;
+  onNavigateClick?: () => void;
 }
 
 export function BathroomCard({
@@ -17,7 +20,8 @@ export function BathroomCard({
   hasWheelchairAccess,
   hasChangingTables,
   lastReviewed,
-  description
+  description,
+  onNavigateClick
 }: BathroomCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
@@ -46,11 +50,22 @@ export function BathroomCard({
         )}
       </div>
       
-      <div className="flex justify-between text-xs text-gray-500">
-        {distance && (
-          <span>📍 {distance} away</span>
-        )}
-        <span>Last reviewed: {lastReviewed}</span>
+      <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center gap-4">
+          {distance && (
+            <span className="text-gray-500">📍 {distance} away</span>
+          )}
+          {onNavigateClick && (
+            <button
+              onClick={onNavigateClick}
+              className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
+            >
+              <Navigation size={14} />
+              <span>Directions</span>
+            </button>
+          )}
+        </div>
+        <span className="text-gray-500">Last reviewed: {lastReviewed}</span>
       </div>
     </div>
   );
