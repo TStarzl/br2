@@ -1,14 +1,7 @@
 // src/components/map/FilterBar.tsx
 import React from 'react';
 
-interface FilterBarProps {
-  filters: {
-    minRating: number;
-    wheelchairAccess: boolean;
-    changingTables: boolean;
-  };
-  onFilterChange: (filters: FilterBarProps['filters']) => void;
-}
+import { FilterBarProps } from './types';
 
 export function FilterBar({ filters, onFilterChange }: FilterBarProps) {
   // Helper function to generate rating stars

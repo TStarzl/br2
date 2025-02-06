@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation, Map, X } from 'lucide-react';
 
-interface NavigationModalProps {
-  bathroom: {
-    name: string;
-    lat: number;
-    lng: number;
-  };
-  userLocation: {
-    lat: number;
-    lng: number;
-  } | null;
-  onClose: () => void;
-}
+import { NavigationModalProps } from './types';
 
 export function NavigationModal({ bathroom, userLocation, onClose }: NavigationModalProps) {
   const [locationTimedOut, setLocationTimedOut] = useState(false);

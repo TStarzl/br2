@@ -2,19 +2,7 @@
 import React from 'react';
 import { Navigation, Clock } from 'lucide-react';
 
-interface BathroomCardProps {
-  name: string;
-  distance?: string;
-  rating?: number;
-  hasWheelchairAccess: boolean;
-  hasChangingTables: boolean;
-  isGenderNeutral: boolean;
-  requiresKey: boolean;
-  hoursOfOperation: string;
-  description: string;
-  lastReviewed?: string;
-  onNavigateClick?: () => void;
-}
+import { BathroomCardProps } from './types';
 
 export function BathroomCard({
   name,

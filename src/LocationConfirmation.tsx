@@ -3,14 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-interface LocationConfirmationProps {
-  location: {
-    lat: number;
-    lng: number;
-    address: string;
-  };
-  onLocationChange: (newLocation: { lat: number; lng: number }) => void;
-}
+import { LocationConfirmationProps } from './types';
 
 // Center map on location whenever it changes
 function MapUpdater({ location }: { location: { lat: number; lng: number } }) {

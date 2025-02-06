@@ -3,35 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { X, ArrowUpDown, Search } from 'lucide-react';
 import { BathroomCard } from './BathroomCard';
 
-interface Bathroom {
-  id: string;
-  name: string;
-  description: string;
-  lat: number;
-  lng: number;
-  totalRating: number;
-  ratingCount: number;
-  hasWheelchairAccess: boolean;
-  hasChangingTables: boolean;
-  isGenderNeutral?: boolean;
-  requiresKey?: boolean;
-  hoursOfOperation?: string;
-  distance?: number;
-}
-
-interface BathroomSidebarProps {
-  bathrooms: Bathroom[];
-  userLocation: { lat: number; lng: number } | null;
-  isOpen: boolean;
-  onClose: () => void;
-  /** Called when the user clicks anywhere on the bathroom card (except the Directions button).  
-      In the parent component, this callback should fly the map to the bathroom’s location. */
-  onBathroomSelect?: (bathroom: Bathroom) => void;
-  /** Called when the user clicks the Directions button on the card.  
-      In the parent component, this callback should open the navigation modal. */
-  onNavigateClick?: (bathroom: Bathroom) => void;
-}
-
+import { Bathroom, BathroomSidebarProps } from './types';
 type SortOption = 'distance' | 'rating' | 'name';
 
 export function BathroomSidebar({

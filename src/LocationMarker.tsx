@@ -4,9 +4,7 @@ import { useMap, useMapEvents, Marker, Popup } from 'react-leaflet';
 import { LatLng } from 'leaflet';
 import { Navigation } from 'lucide-react';
 
-interface LocationMarkerProps {
-  onLocationFound: (location: LatLng) => void;
-}
+import { LocationMarkerProps } from './types';
 
 export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
   const [position, setPosition] = useState<LatLng | null>(null);

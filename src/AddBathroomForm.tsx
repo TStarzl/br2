@@ -4,29 +4,11 @@ import { X, Star, Loader, Clock } from 'lucide-react';
 import { LocationSearch } from './LocationSearch';
 import { LocationConfirmation } from './LocationConfirmation';
 
-interface FormData {
-  name: string;
-  description: string;
-  lat: string;
-  lng: string;
-  address: string;
-  rating: number;
-  ratingCount: number;
-  totalRating: number;
-  hasWheelchairAccess: boolean;
-  hasChangingTables: boolean;
-  isGenderNeutral: boolean;
-  requiresKey: boolean;
-  hoursOfOperation: string;
-}
+import { BathroomFormData, AddBathroomFormProps } from './types';
 
-interface AddBathroomFormProps {
-  onClose: () => void;
-  initialLocation?: { lat: number; lng: number };
-}
 
 export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormProps) {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<BathroomFormData>({
     name: '',
     description: '',
     lat: initialLocation?.lat.toString() || '',

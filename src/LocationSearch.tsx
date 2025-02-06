@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Loader, MapPin } from 'lucide-react';
 
-interface Location {
-  lat: number;
-  lng: number;
-  address: string;
-  distance?: number;
-}
-
-interface LocationSearchProps {
-  onLocationSelect: (location: Location) => void;
-  initialLocation?: { lat: number; lng: number };
-}
+import { Location, LocationSearchProps } from './types';
 
 export function LocationSearch({ onLocationSelect, initialLocation }: LocationSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,7 +57,7 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
       const data = await response.json();
       
       if (data && data[0]) {
-        let location = {
+        let location: Location = {
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
           address: data[0].display_name
@@ -96,7 +86,7 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
   };
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371;
+    const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 

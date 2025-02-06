@@ -9,36 +9,23 @@ import { LocationMarker } from './LocationMarker';
 import { AddBathroomForm } from './AddBathroomForm';
 import { BathroomSidebar } from './BathroomSidebar';
 import { BathroomCard } from './BathroomCard';
-import { NavigationModal } from './src/components/navigation/NavigationModal';
+import { NavigationModal } from './NavigationModal';
 import { toiletIcon } from './src/utils/icons';
 import { calculateDistance } from './src/utils/distance';
 
-// Firebase configuration using environment variables
-const firebaseConfig = {
-  apiKey: "AIzaSyDjmaDA7_2XiHvlIlBokDLc3_wOE_2ZqqA",
-  authDomain: "bathroom-finder-e51e0.firebaseapp.com",
-  databaseURL: "https://bathroom-finder-e51e0-default-rtdb.firebaseio.com",
-  projectId: "bathroom-finder-e51e0",
-  storageBucket: "bathroom-finder-e51e0.firebasestorage.app",
-  messagingSenderId: "169719086282",
-  appId: "1:169719086282:web:c11f3709cecbd48fa00833",
-  measurementId: "G-V7DP0ZJ82Y"
-};
 
-interface Bathroom {
-  id: string;
-  name: string;
-  description: string;
-  lat: number;
-  lng: number;
-  totalRating: number;
-  ratingCount: number;
-  hasWheelchairAccess: boolean;
-  hasChangingTables: boolean;
-  isGenderNeutral?: boolean;
-  requiresKey?: boolean;
-  hoursOfOperation?: string;
-}
+import { Bathroom } from './types';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -73,9 +60,17 @@ export default function BathroomMap() {
       if (data) {
         const bathroomsList = Object.entries(data).map(([id, value]) => ({
           id,
-          ...(value as Record<string, any>),
+          name: (value as any).name || '',
+          description: (value as any).description || '',
           lat: Number((value as any).lat),
           lng: -Math.abs(Number((value as any).lng)),
+          totalRating: (value as any).totalRating || 0,
+          ratingCount: (value as any).ratingCount || 0,
+          hasWheelchairAccess: Boolean((value as any).hasWheelchairAccess),
+          hasChangingTables: Boolean((value as any).hasChangingTables),
+          isGenderNeutral: Boolean((value as any).isGenderNeutral),
+          requiresKey: Boolean((value as any).requiresKey),
+          hoursOfOperation: (value as any).hoursOfOperation || '24/7'
         }));
         console.log("Fetched bathrooms:", bathroomsList);
         setBathrooms(bathroomsList);
