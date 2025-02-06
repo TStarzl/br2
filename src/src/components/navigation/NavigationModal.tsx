@@ -1,4 +1,3 @@
-// src/components/NavigationModal.tsx
 import React, { useState, useEffect } from 'react';
 import { Navigation, Map, X } from 'lucide-react';
 
@@ -16,13 +15,10 @@ interface NavigationModalProps {
 }
 
 export function NavigationModal({ bathroom, userLocation, onClose }: NavigationModalProps) {
-  // State to indicate whether we've waited long enough for location data.
   const [locationTimedOut, setLocationTimedOut] = useState(false);
 
   useEffect(() => {
-    console.log("userLocation:", userLocation);
     if (!userLocation) {
-      // Wait for 3 seconds before showing the error message.
       const timer = setTimeout(() => {
         setLocationTimedOut(true);
       }, 3000);
@@ -30,7 +26,6 @@ export function NavigationModal({ bathroom, userLocation, onClose }: NavigationM
     }
   }, [userLocation]);
 
-  // If userLocation is not available, show a loading message first and then an error message after timeout.
   if (!userLocation) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
@@ -59,10 +54,8 @@ export function NavigationModal({ bathroom, userLocation, onClose }: NavigationM
     );
   }
 
-  // Generate navigation URLs
   const destination = `${bathroom.lat},${bathroom.lng}`;
   const origin = `${userLocation.lat},${userLocation.lng}`;
-  const encodedName = encodeURIComponent(bathroom.name);
 
   const navigationUrls = {
     google: `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=walking`,
@@ -72,14 +65,12 @@ export function NavigationModal({ bathroom, userLocation, onClose }: NavigationM
     browser: `https://www.openstreetmap.org/directions?from=${origin}&to=${destination}`
   };
 
-  // Platform detection
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isAndroid = /Android/.test(navigator.userAgent);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-  // Helper function: calculate walking distance using the haversine formula.
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a =

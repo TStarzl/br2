@@ -14,11 +14,8 @@ interface LocationSearchProps {
 }
 
 export function LocationSearch({ onLocationSelect, initialLocation }: LocationSearchProps) {
-
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     initialLocation ? {
       lat: initialLocation.lat,
@@ -26,8 +23,9 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
       address: 'Current Location'
     } : null
   );
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Get user's location on component mount
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -36,7 +34,7 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
           lng: position.coords.longitude
         });
       },
-      (error) => {
+      () => {
         console.log('Location access denied or unavailable');
       }
     );
@@ -46,19 +44,17 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
     if (!searchTerm.trim()) return;
     
     setIsLoading(true);
-    setError('');
+    setErrorMessage('');
     
     try {
-      // Build search parameters
       const params = new URLSearchParams({
         format: 'json',
         q: searchTerm,
-        countrycodes: 'us', // Limit to US results
+        countrycodes: 'us',
         limit: '5',
         addressdetails: '1'
       });
 
-      // Add user location if available to get nearby results first
       if (userLocation) {
         params.append('lat', userLocation.lat.toString());
         params.append('lon', userLocation.lng.toString());
@@ -71,7 +67,6 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
       const data = await response.json();
       
       if (data && data[0]) {
-        // Calculate distance from user if user location is available
         let location = {
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
@@ -79,7 +74,6 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
         };
 
         if (userLocation) {
-          // Add distance information if we have user location
           const distance = calculateDistance(
             userLocation.lat,
             userLocation.lng,
@@ -92,18 +86,17 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
         setSelectedLocation(location);
         onLocationSelect(location);
       } else {
-        setError('No location found. Please try a different search term.');
+        setErrorMessage('No location found. Please try a different search term.');
       }
     } catch (err) {
-      setError('Error searching location. Please try again.');
+      setErrorMessage('Error searching location. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Calculate distance between two points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -146,9 +139,9 @@ export function LocationSearch({ onLocationSelect, initialLocation }: LocationSe
         )}
       </div>
       
-      {error && (
+      {errorMessage && (
         <p className="text-sm text-red-600">
-          {error}
+          {errorMessage}
         </p>
       )}
 

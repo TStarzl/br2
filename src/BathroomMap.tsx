@@ -1,11 +1,9 @@
-// src/components/map/BathroomMap.tsx
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { Menu, Navigation } from 'lucide-react';
 
-// Import our components
 import { FilterBar } from './FilterBar';
 import { LocationMarker } from './LocationMarker';
 import { AddBathroomForm } from './AddBathroomForm';
@@ -15,26 +13,37 @@ import { NavigationModal } from './src/components/navigation/NavigationModal';
 import { toiletIcon } from './src/utils/icons';
 import { calculateDistance } from './src/utils/distance';
 
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyDjmaDA7_2XiHvlIlBokDLc3_wOE_2ZqqA",
+  authDomain: "bathroom-finder-e51e0.firebaseapp.com",
+  databaseURL: "https://bathroom-finder-e51e0-default-rtdb.firebaseio.com",
+  projectId: "bathroom-finder-e51e0",
+  storageBucket: "bathroom-finder-e51e0.firebasestorage.app",
+  messagingSenderId: "169719086282",
+  appId: "1:169719086282:web:c11f3709cecbd48fa00833",
+  measurementId: "G-V7DP0ZJ82Y"
 };
+
+interface Bathroom {
+  id: string;
+  name: string;
+  description: string;
+  lat: number;
+  lng: number;
+  totalRating: number;
+  ratingCount: number;
+  hasWheelchairAccess: boolean;
+  hasChangingTables: boolean;
+  isGenderNeutral?: boolean;
+  requiresKey?: boolean;
+  hoursOfOperation?: string;
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-/**
- * This component is rendered inside the MapContainer.
- * It uses the useMap hook to get the map instance and then calls the
- * setMapInstance callback passed from the parent.
- */
 function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void }) {
   const map = useMap();
   React.useEffect(() => {
@@ -44,11 +53,11 @@ function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void
 }
 
 export default function BathroomMap() {
-  const [bathrooms, setBathrooms] = useState<any[]>([]);
+  const [bathrooms, setBathrooms] = useState<Bathroom[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedBathroom, setSelectedBathroom] = useState<any>(null);
+  const [selectedBathroom, setSelectedBathroom] = useState<Bathroom | null>(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const [filters, setFilters] = useState({
     minRating: 0,
@@ -64,10 +73,9 @@ export default function BathroomMap() {
       if (data) {
         const bathroomsList = Object.entries(data).map(([id, value]) => ({
           id,
-          ...value,
-          lat: Number(value.lat),
-          // Ensure lng is negative (if needed for your region)
-          lng: -Math.abs(Number(value.lng)),
+          ...(value as Record<string, any>),
+          lat: Number((value as any).lat),
+          lng: -Math.abs(Number((value as any).lng)),
         }));
         console.log("Fetched bathrooms:", bathroomsList);
         setBathrooms(bathroomsList);
@@ -78,7 +86,7 @@ export default function BathroomMap() {
     return () => unsubscribe();
   }, []);
 
-  const filterBathrooms = (bathrooms: any[]) => {
+  const filterBathrooms = (bathrooms: Bathroom[]) => {
     return bathrooms.filter((bathroom) => {
       const rating = bathroom.totalRating / bathroom.ratingCount;
       return (
@@ -95,33 +103,27 @@ export default function BathroomMap() {
     }
   };
 
-  // This function flies the map to the selected bathroom.
-  const flyToBathroom = (bathroom: any) => {
+  const flyToBathroom = (bathroom: Bathroom) => {
     if (mapInstance) {
       console.log("Flying to bathroom at:", bathroom.lat, bathroom.lng);
       mapInstance.flyTo([bathroom.lat, bathroom.lng], 16, {
         duration: 1.5,
         easeLinearity: 0.25,
       });
-    } else {
-      console.log("Map instance not available");
     }
   };
 
-  // This function opens the navigation modal for the given bathroom.
-  const handleNavigateClick = (bathroom: any) => {
+  const handleNavigateClick = (bathroom: Bathroom) => {
     setSelectedBathroom(bathroom);
     setShowNavigation(true);
   };
 
   return (
     <div className="h-screen w-full relative">
-      {/* Filter Bar */}
       <div className="absolute top-4 left-16 right-20 z-[1001] flex justify-center">
         <FilterBar filters={filters} onFilterChange={setFilters} />
       </div>
 
-      {/* Main Map */}
       <MapContainer
         center={[47.6062, -122.3321]}
         zoom={13}
@@ -132,7 +134,6 @@ export default function BathroomMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <LocationMarker onLocationFound={setUserLocation} />
-        {/* Set the map instance using our helper component */}
         <SetMapInstance setMapInstance={setMapInstance} />
         
         {filterBathrooms(bathrooms).map((bathroom) => (
@@ -146,11 +147,11 @@ export default function BathroomMap() {
                 name={bathroom.name}
                 description={bathroom.description}
                 rating={bathroom.totalRating / bathroom.ratingCount}
-                hasWheelchairAccess={bathroom.hasWheelchairAccess || false}
-                hasChangingTables={bathroom.hasChangingTables || false}
-                isGenderNeutral={bathroom.isGenderNeutral || false}
-                requiresKey={bathroom.requiresKey || false}
-                hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
+                hasWheelchairAccess={bathroom.hasWheelchairAccess}
+                hasChangingTables={bathroom.hasChangingTables}
+                isGenderNeutral={bathroom.isGenderNeutral}
+                requiresKey={bathroom.requiresKey}
+                hoursOfOperation={bathroom.hoursOfOperation}
                 lastReviewed={new Date().toLocaleDateString()}
                 distance={
                   userLocation
@@ -162,7 +163,6 @@ export default function BathroomMap() {
                       ).toFixed(2)}km`
                     : undefined
                 }
-                // In the Popup, clicking "Directions" opens the navigation modal.
                 onNavigateClick={() => handleNavigateClick(bathroom)}
               />
             </Popup>
@@ -170,7 +170,6 @@ export default function BathroomMap() {
         ))}
       </MapContainer>
 
-      {/* Control Buttons */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className="absolute top-4 left-4 z-[1001] bg-white p-2 rounded-md shadow-md hover:bg-gray-100"
@@ -196,19 +195,16 @@ export default function BathroomMap() {
         </button>
       )}
 
-      {/* Sidebar for Bathrooms */}
       <BathroomSidebar
         bathrooms={filterBathrooms(bathrooms)}
         userLocation={userLocation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        // When a card is clicked (outside the Directions button), fly the map to that bathroom.
         onBathroomSelect={(bathroom) => {
           console.log("Selected bathroom for flyTo:", bathroom);
           flyToBathroom(bathroom);
           setIsSidebarOpen(false);
         }}
-        // When the Directions button is clicked, open the navigation modal.
         onNavigateClick={(bathroom) => {
           handleNavigateClick(bathroom);
           setIsSidebarOpen(false);
