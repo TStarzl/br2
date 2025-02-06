@@ -15,16 +15,15 @@ import { NavigationModal } from './src/components/navigation/NavigationModal';
 import { toiletIcon } from './src/utils/icons';
 import { calculateDistance } from './src/utils/distance';
 
-// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDjmaDA7_2XiHvlIlBokDLc3_wOE_2ZqqA",
-  authDomain: "bathroom-finder-e51e0.firebaseapp.com",
-  projectId: "bathroom-finder-e51e0",
-  storageBucket: "bathroom-finder-e51e0.appspot.com",
-  messagingSenderId: "169719086282",
-  appId: "1:169719086282:web:c11f3709cecbd48fa00833",
-  measurementId: "G-V7DP0ZJ82Y",
-  databaseURL: "https://bathroom-finder-e51e0-default-rtdb.firebaseio.com"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
