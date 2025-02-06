@@ -108,31 +108,34 @@ export default function BathroomMap() {
         <LocationMarker onLocationFound={setUserLocation} />
         
         {filterBathrooms(bathrooms).map((bathroom) => (
-          <Marker
-            key={bathroom.id}
-            position={[bathroom.lat, bathroom.lng]}
-            icon={toiletIcon}
-          >
-            <Popup>
-              <BathroomCard
-                name={bathroom.name}
-                description={bathroom.description}
-                rating={bathroom.totalRating / bathroom.ratingCount}
-                hasWheelchairAccess={bathroom.hasWheelchairAccess || false}
-                hasChangingTables={bathroom.hasChangingTables || false}
-                lastReviewed={new Date().toLocaleDateString()}
-                distance={userLocation ? 
-                  `${calculateDistance(
-                    userLocation.lat, 
-                    userLocation.lng, 
-                    bathroom.lat, 
-                    bathroom.lng
-                  ).toFixed(2)}km` : undefined}
-                onNavigateClick={() => handleNavigateClick(bathroom)}
-              />
-            </Popup>
-          </Marker>
-        ))}
+  <Marker
+    key={bathroom.id}
+    position={[bathroom.lat, bathroom.lng]}
+    icon={toiletIcon}
+  >
+    <Popup>
+      <BathroomCard
+        name={bathroom.name}
+        description={bathroom.description}
+        rating={bathroom.totalRating / bathroom.ratingCount}
+        hasWheelchairAccess={bathroom.hasWheelchairAccess || false}
+        hasChangingTables={bathroom.hasChangingTables || false}
+        isGenderNeutral={bathroom.isGenderNeutral || false}
+        requiresKey={bathroom.requiresKey || false}
+        hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
+        lastReviewed={new Date().toLocaleDateString()}
+        distance={userLocation ? 
+          `${calculateDistance(
+            userLocation.lat, 
+            userLocation.lng, 
+            bathroom.lat, 
+            bathroom.lng
+          ).toFixed(2)}km` : undefined}
+        onNavigateClick={() => handleNavigateClick(bathroom)}
+      />
+    </Popup>
+  </Marker>
+))}
       </MapContainer>
 
       {/* Control Buttons */}

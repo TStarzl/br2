@@ -1,6 +1,5 @@
-// src/components/ui/BathroomCard.tsx
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { Navigation, Clock } from 'lucide-react';
 
 interface BathroomCardProps {
   name: string;
@@ -8,8 +7,11 @@ interface BathroomCardProps {
   rating?: number;
   hasWheelchairAccess: boolean;
   hasChangingTables: boolean;
-  lastReviewed: string;
+  isGenderNeutral: boolean;
+  requiresKey: boolean;
+  hoursOfOperation: string;
   description: string;
+  lastReviewed?: string;
   onNavigateClick?: () => void;
 }
 
@@ -19,8 +21,11 @@ export function BathroomCard({
   rating,
   hasWheelchairAccess,
   hasChangingTables,
-  lastReviewed,
+  isGenderNeutral,
+  requiresKey,
+  hoursOfOperation,
   description,
+  lastReviewed,
   onNavigateClick
 }: BathroomCardProps) {
   return (
@@ -37,6 +42,7 @@ export function BathroomCard({
       
       <p className="text-gray-600 text-sm mb-3">{description}</p>
       
+      {/* Features */}
       <div className="flex flex-wrap gap-2 mb-3">
         {hasWheelchairAccess && (
           <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
@@ -48,7 +54,25 @@ export function BathroomCard({
             🚼 Changing Tables
           </span>
         )}
+        {isGenderNeutral && (
+          <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+            ⚧ Gender Neutral
+          </span>
+        )}
+        {requiresKey && (
+          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+            🔑 Requires Key/Code
+          </span>
+        )}
       </div>
+      
+      {/* Hours */}
+      {hoursOfOperation && (
+        <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+          <Clock size={14} className="text-gray-400" />
+          <span>{hoursOfOperation || 'Hours not specified'}</span>
+        </div>
+      )}
       
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-4">
@@ -65,10 +89,10 @@ export function BathroomCard({
             </button>
           )}
         </div>
-        <span className="text-gray-500">Last reviewed: {lastReviewed}</span>
+        {lastReviewed && (
+          <span className="text-gray-500">Last reviewed: {lastReviewed}</span>
+        )}
       </div>
     </div>
   );
 }
-
-export default BathroomCard;

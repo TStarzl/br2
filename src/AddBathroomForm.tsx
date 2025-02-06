@@ -1,13 +1,15 @@
-// src/components/map/AddBathroomForm.tsx
 import React, { useState } from 'react';
 import { getDatabase, ref, push } from 'firebase/database';
-import { X, Star, Loader } from 'lucide-react';
+import { X, Star, Loader, Clock } from 'lucide-react';
+import { LocationSearch } from './LocationSearch';
+import { LocationConfirmation } from './LocationConfirmation';
 
 interface FormData {
   name: string;
   description: string;
   lat: string;
   lng: string;
+  address: string;
   rating: number;
   ratingCount: number;
   totalRating: number;
@@ -29,6 +31,7 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
     description: '',
     lat: initialLocation?.lat.toString() || '',
     lng: initialLocation?.lng.toString() || '',
+    address: '',
     rating: 5,
     ratingCount: 1,
     totalRating: 5,
@@ -41,6 +44,25 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showLocationConfirmation, setShowLocationConfirmation] = useState(false);
+
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      lat: location.lat.toString(),
+      lng: location.lng.toString(),
+      address: location.address
+    }));
+    setShowLocationConfirmation(true);
+  };
+
+  const handleLocationAdjust = (newLocation: { lat: number; lng: number }) => {
+    setFormData(prev => ({
+      ...prev,
+      lat: newLocation.lat.toString(),
+      lng: newLocation.lng.toString()
+    }));
+  };
 
   const validateForm = () => {
     if (!formData.name.trim()) return "Name is required";
@@ -69,7 +91,7 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
     const dataToSubmit = {
       ...formData,
       lat: Number(formData.lat),
-      lng: -Math.abs(Number(formData.lng)),
+      lng: Number(formData.lng),
       rating: Number(formData.rating),
       ratingCount: 1,
       totalRating: Number(formData.rating),
@@ -127,6 +149,27 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
             />
           </div>
 
+          {/* Location Search and Confirmation */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Location</label>
+            <LocationSearch 
+              onLocationSelect={handleLocationSelect}
+              initialLocation={initialLocation}
+            />
+            {showLocationConfirmation && formData.lat && formData.lng && (
+              <div className="mt-4">
+                <LocationConfirmation
+                  location={{
+                    lat: Number(formData.lat),
+                    lng: Number(formData.lng),
+                    address: formData.address
+                  }}
+                  onLocationChange={handleLocationAdjust}
+                />
+              </div>
+            )}
+          </div>
+
           {/* Rating */}
           <div>
             <label className="block text-sm font-medium mb-1">Initial Rating</label>
@@ -144,32 +187,6 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
                   />
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                value={formData.lat}
-                onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                className="w-full rounded-md border border-gray-300 p-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                value={formData.lng}
-                onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                className="w-full rounded-md border border-gray-300 p-2"
-                required
-              />
             </div>
           </div>
 
@@ -217,13 +234,16 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
           {/* Hours */}
           <div>
             <label className="block text-sm font-medium mb-1">Hours of Operation</label>
-            <input
-              type="text"
-              value={formData.hoursOfOperation}
-              onChange={(e) => setFormData({ ...formData, hoursOfOperation: e.target.value })}
-              className="w-full rounded-md border border-gray-300 p-2"
-              placeholder="e.g., 24/7 or 9 AM - 5 PM"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.hoursOfOperation}
+                onChange={(e) => setFormData({ ...formData, hoursOfOperation: e.target.value })}
+                className="w-full rounded-md border border-gray-300 p-2 pl-8"
+                placeholder="e.g., 24/7 or 9 AM - 5 PM"
+              />
+              <Clock className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            </div>
           </div>
 
           {error && (
@@ -261,5 +281,3 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
     </div>
   );
 }
-
-export default AddBathroomForm;

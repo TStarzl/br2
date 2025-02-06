@@ -43,14 +43,23 @@ export function BathroomSidebar({
   const sortedAndFilteredBathrooms = useMemo(() => {
     let processed = bathrooms
       .map(bathroom => ({
-        ...bathroom,
+        ...bathroom,  // This is correct, but let's be explicit about the properties
+        id: bathroom.id,
+        name: bathroom.name,
+        description: bathroom.description,
         rating: bathroom.totalRating / bathroom.ratingCount,
+        hasWheelchairAccess: bathroom.hasWheelchairAccess,
+        hasChangingTables: bathroom.hasChangingTables,
+        isGenderNeutral: bathroom.isGenderNeutral,
+        requiresKey: bathroom.requiresKey,
+        hoursOfOperation: bathroom.hoursOfOperation,
+        distance: bathroom.distance
       }))
       .filter(bathroom => 
         bathroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         bathroom.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-
+  
     switch (sortBy) {
       case 'distance':
         return processed.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
@@ -68,6 +77,18 @@ export function BathroomSidebar({
   };
 
   const handleBathroomClick = (bathroom: Bathroom) => {
+    // Get the map instance using Leaflet's ID-based lookup
+    const mapContainer = document.querySelector('.leaflet-container');
+    if (mapContainer) {
+      const map = (window as any).L?.map(mapContainer);
+      if (map) {
+        map.flyTo([bathroom.lat, bathroom.lng], 16, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
+    }
+    // Call the original onBathroomSelect handler
     onBathroomSelect?.(bathroom);
   };
 
@@ -139,7 +160,22 @@ export function BathroomSidebar({
             {sortedAndFilteredBathrooms.map((bathroom) => (
               <div
                 key={bathroom.id}
-                className="cursor-pointer"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => {
+                  // Get all elements with leaflet-container class
+                  const containers = document.getElementsByClassName('leaflet-container');
+                  // Get the first container and its map instance
+                  const mapContainer = containers[0] as any;
+                  if (mapContainer && mapContainer._leaflet_id) {
+                    const map = (window as any).L.maps[mapContainer._leaflet_id];
+                    if (map) {
+                      map.flyTo([bathroom.lat, bathroom.lng], 16, {
+                        duration: 1.5, // Duration in seconds
+                        easeLinearity: 0.25
+                      });
+                    }
+                  }
+                }}
               >
                 <BathroomCard
                   name={bathroom.name}
@@ -147,11 +183,17 @@ export function BathroomSidebar({
                   rating={bathroom.rating}
                   hasWheelchairAccess={bathroom.hasWheelchairAccess}
                   hasChangingTables={bathroom.hasChangingTables}
+                  isGenderNeutral={bathroom.isGenderNeutral || false}
+                  requiresKey={bathroom.requiresKey || false}
+                  hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
                   lastReviewed={new Date().toLocaleDateString()}
                   distance={bathroom.distance ? 
                     `${bathroom.distance.toFixed(2)}km` : undefined
                   }
-                  onNavigateClick={() => handleBathroomClick(bathroom)}
+                  onNavigateClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering the parent onClick
+                    onBathroomSelect?.(bathroom);
+                  }}
                 />
               </div>
             ))}
