@@ -2,11 +2,9 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Location, LocationConfirmationProps } from './types';
 
-import { LocationConfirmationProps } from './types';
-
-// Center map on location whenever it changes
-function MapUpdater({ location }: { location: { lat: number; lng: number } }) {
+function MapUpdater({ location }: { location: Location }) {
   const map = useMap();
   
   useEffect(() => {
@@ -16,7 +14,6 @@ function MapUpdater({ location }: { location: { lat: number; lng: number } }) {
   return null;
 }
 
-// Changed from default export to named export
 export function LocationConfirmation({ location, onLocationChange }: LocationConfirmationProps) {
   const markerIcon = new Icon({
     iconUrl: 'data:image/svg+xml;base64,' + btoa(`
@@ -28,6 +25,16 @@ export function LocationConfirmation({ location, onLocationChange }: LocationCon
     iconSize: [32, 32],
     iconAnchor: [16, 32],
   });
+
+  const handleMarkerDrag = (e: any) => {
+    const marker = e.target;
+    const position = marker.getLatLng();
+    onLocationChange({
+      ...location,
+      lat: position.lat,
+      lng: position.lng
+    });
+  };
 
   return (
     <div className="space-y-2">
@@ -53,14 +60,7 @@ export function LocationConfirmation({ location, onLocationChange }: LocationCon
             draggable={true}
             icon={markerIcon}
             eventHandlers={{
-              dragend: (e) => {
-                const marker = e.target;
-                const position = marker.getLatLng();
-                onLocationChange({
-                  lat: position.lat,
-                  lng: position.lng
-                });
-              },
+              dragend: handleMarkerDrag,
             }}
           />
           <MapUpdater location={location} />

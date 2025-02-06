@@ -12,9 +12,7 @@ import { BathroomCard } from './BathroomCard';
 import { NavigationModal } from './NavigationModal';
 import { toiletIcon } from './src/utils/icons';
 import { calculateDistance } from './src/utils/distance';
-
-
-import { Bathroom } from './types';
+import { Bathroom, Location } from './types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -42,16 +40,16 @@ function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void
 export default function BathroomMap() {
   const [bathrooms, setBathrooms] = useState<Bathroom[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedBathroom, setSelectedBathroom] = useState<Bathroom | null>(null);
   const [showNavigation, setShowNavigation] = useState(false);
+  const [mapInstance, setMapInstance] = useState<any>(null);
   const [filters, setFilters] = useState({
     minRating: 0,
     wheelchairAccess: false,
     changingTables: false,
   });
-  const [mapInstance, setMapInstance] = useState<any>(null);
 
   useEffect(() => {
     const bathroomsRef = ref(database, 'bathrooms');
@@ -63,16 +61,16 @@ export default function BathroomMap() {
           name: (value as any).name || '',
           description: (value as any).description || '',
           lat: Number((value as any).lat),
-          lng: -Math.abs(Number((value as any).lng)),
+          lng: Number((value as any).lng),
           totalRating: (value as any).totalRating || 0,
           ratingCount: (value as any).ratingCount || 0,
           hasWheelchairAccess: Boolean((value as any).hasWheelchairAccess),
           hasChangingTables: Boolean((value as any).hasChangingTables),
           isGenderNeutral: Boolean((value as any).isGenderNeutral),
           requiresKey: Boolean((value as any).requiresKey),
-          hoursOfOperation: (value as any).hoursOfOperation || '24/7'
+          hoursOfOperation: (value as any).hoursOfOperation || '24/7',
+          address: (value as any).address || ''
         }));
-        console.log("Fetched bathrooms:", bathroomsList);
         setBathrooms(bathroomsList);
       } else {
         setBathrooms([]);
@@ -100,7 +98,6 @@ export default function BathroomMap() {
 
   const flyToBathroom = (bathroom: Bathroom) => {
     if (mapInstance) {
-      console.log("Flying to bathroom at:", bathroom.lat, bathroom.lng);
       mapInstance.flyTo([bathroom.lat, bathroom.lng], 16, {
         duration: 1.5,
         easeLinearity: 0.25,
@@ -111,6 +108,10 @@ export default function BathroomMap() {
   const handleNavigateClick = (bathroom: Bathroom) => {
     setSelectedBathroom(bathroom);
     setShowNavigation(true);
+  };
+
+  const handleLocationFound = (location: Location) => {
+    setUserLocation(location);
   };
 
   return (
@@ -128,7 +129,7 @@ export default function BathroomMap() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <LocationMarker onLocationFound={setUserLocation} />
+        <LocationMarker onLocationFound={handleLocationFound} />
         <SetMapInstance setMapInstance={setMapInstance} />
         
         {filterBathrooms(bathrooms).map((bathroom) => (
@@ -191,12 +192,19 @@ export default function BathroomMap() {
       )}
 
       <BathroomSidebar
-        bathrooms={filterBathrooms(bathrooms)}
+        bathrooms={filterBathrooms(bathrooms).map(bathroom => ({
+          ...bathroom,
+          distance: userLocation ? calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            bathroom.lat,
+            bathroom.lng
+          ) : undefined
+        }))}
         userLocation={userLocation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onBathroomSelect={(bathroom) => {
-          console.log("Selected bathroom for flyTo:", bathroom);
           flyToBathroom(bathroom);
           setIsSidebarOpen(false);
         }}
@@ -206,15 +214,15 @@ export default function BathroomMap() {
         }}
       />
 
-{showForm && (
-  <AddBathroomForm
-    onClose={() => setShowForm(false)}
-    initialLocation={userLocation ? {
-      lat: userLocation.lat,
-      lng: userLocation.lng
-    } : undefined}
-  />
-)}
+      {showForm && (
+        <AddBathroomForm
+          onClose={() => setShowForm(false)}
+          initialLocation={userLocation ? {
+            lat: userLocation.lat,
+            lng: userLocation.lng
+          } : undefined}
+        />
+      )}
 
       {showNavigation && selectedBathroom && (
         <NavigationModal

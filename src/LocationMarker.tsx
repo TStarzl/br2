@@ -1,10 +1,8 @@
-// src/components/map/LocationMarker.tsx
 import React, { useEffect, useState } from 'react';
 import { useMap, useMapEvents, Marker, Popup } from 'react-leaflet';
 import { LatLng } from 'leaflet';
 import { Navigation } from 'lucide-react';
-
-import { LocationMarkerProps } from './types';
+import { Location, LocationMarkerProps } from './types';
 
 export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
   const [position, setPosition] = useState<LatLng | null>(null);
@@ -16,8 +14,8 @@ export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
       setView: true,
       maxZoom: 16,
       enableHighAccuracy: true,
-      watch: true, // Continuously watch position
-      timeout: 10000 // 10 second timeout
+      watch: true,
+      timeout: 10000
     });
   }, [map]);
 
@@ -34,7 +32,8 @@ export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
     locationfound(e) {
       const newLocation: Location = {
         lat: e.latlng.lat,
-        lng: e.latlng.lng
+        lng: e.latlng.lng,
+        address: 'Current Location' // Default address for user location
       };
       setPosition(e.latlng);
       onLocationFound(newLocation);
@@ -81,5 +80,3 @@ export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
     </>
   );
 }
-
-export default LocationMarker;
