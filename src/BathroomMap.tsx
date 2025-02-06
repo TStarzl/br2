@@ -206,12 +206,15 @@ export default function BathroomMap() {
         }}
       />
 
-      {showForm && (
-        <AddBathroomForm
-          onClose={() => setShowForm(false)}
-          initialLocation={userLocation}
-        />
-      )}
+{showForm && (
+  <AddBathroomForm
+    onClose={() => setShowForm(false)}
+    initialLocation={userLocation ? {
+      lat: userLocation.lat,
+      lng: userLocation.lng
+    } : undefined}
+  />
+)}
 
       {showNavigation && selectedBathroom && (
         <NavigationModal

@@ -28,15 +28,16 @@ export function AddBathroomForm({ onClose, initialLocation }: AddBathroomFormPro
   const [error, setError] = useState<string>('');
   const [showLocationConfirmation, setShowLocationConfirmation] = useState(false);
 
-  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
-    setFormData(prev => ({
-      ...prev,
-      lat: location.lat.toString(),
-      lng: location.lng.toString(),
-      address: location.address
-    }));
-    setShowLocationConfirmation(true);
-  };
+// Update the onLocationSelect function type to match Location type
+const handleLocationSelect = (location: Location) => {
+  setFormData(prev => ({
+    ...prev,
+    lat: location.lat.toString(),
+    lng: location.lng.toString(),
+    address: location.address || ''  // Add fallback for optional address
+  }));
+  setShowLocationConfirmation(true);
+};
 
   const handleLocationAdjust = (newLocation: { lat: number; lng: number }) => {
     setFormData(prev => ({

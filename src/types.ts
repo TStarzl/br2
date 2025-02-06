@@ -2,7 +2,7 @@
 export interface Location {
     lat: number;
     lng: number;
-    address?: string;
+    address: string;  // Make address required
     distance?: number;
   }
   
@@ -103,7 +103,10 @@ export interface Location {
   // Props for AddBathroomForm component
   export interface AddBathroomFormProps {
     onClose: () => void;
-    initialLocation?: Location;
+    initialLocation?: {
+      lat: number;
+      lng: number;
+    };
   }
   
   // Props for LocationMarker component

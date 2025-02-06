@@ -32,8 +32,12 @@ export function LocationMarker({ onLocationFound }: LocationMarkerProps) {
 
   useMapEvents({
     locationfound(e) {
+      const newLocation: Location = {
+        lat: e.latlng.lat,
+        lng: e.latlng.lng
+      };
       setPosition(e.latlng);
-      onLocationFound(e.latlng);
+      onLocationFound(newLocation);
       setLocationError('');
       map.flyTo(e.latlng, 16);
     },
