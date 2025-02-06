@@ -1,3 +1,4 @@
+// src/BathroomCard.tsx
 import React from 'react';
 import { Navigation, Clock } from 'lucide-react';
 
@@ -28,6 +29,15 @@ export function BathroomCard({
   lastReviewed,
   onNavigateClick
 }: BathroomCardProps) {
+  // This handler stops the click event from propagating to parent components
+  // (for example, those that might trigger a map fly-to action)
+  const handleNavigateClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (onNavigateClick) {
+      onNavigateClick();
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-2">
@@ -39,9 +49,9 @@ export function BathroomCard({
           </span>
         </div>
       </div>
-      
+
       <p className="text-gray-600 text-sm mb-3">{description}</p>
-      
+
       {/* Features */}
       <div className="flex flex-wrap gap-2 mb-3">
         {hasWheelchairAccess && (
@@ -65,7 +75,7 @@ export function BathroomCard({
           </span>
         )}
       </div>
-      
+
       {/* Hours */}
       {hoursOfOperation && (
         <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
@@ -73,7 +83,7 @@ export function BathroomCard({
           <span>{hoursOfOperation || 'Hours not specified'}</span>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-4">
           {distance && (
@@ -81,7 +91,7 @@ export function BathroomCard({
           )}
           {onNavigateClick && (
             <button
-              onClick={onNavigateClick}
+              onClick={handleNavigateClick}
               className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
             >
               <Navigation size={14} />

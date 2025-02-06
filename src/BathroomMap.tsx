@@ -1,8 +1,8 @@
 // src/components/map/BathroomMap.tsx
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import { Menu, Navigation } from 'lucide-react';
 
 // Import our components
@@ -31,22 +31,35 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+/**
+ * This component is rendered inside the MapContainer.
+ * It uses the useMap hook to get the map instance and then calls the
+ * setMapInstance callback passed from the parent.
+ */
+function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void }) {
+  const map = useMap();
+  React.useEffect(() => {
+    setMapInstance(map);
+  }, [map, setMapInstance]);
+  return null;
+}
+
 export default function BathroomMap() {
-  const [bathrooms, setBathrooms] = useState([]);
+  const [bathrooms, setBathrooms] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedBathroom, setSelectedBathroom] = useState(null);
+  const [selectedBathroom, setSelectedBathroom] = useState<any>(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const [filters, setFilters] = useState({
     minRating: 0,
     wheelchairAccess: false,
-    changingTables: false
+    changingTables: false,
   });
+  const [mapInstance, setMapInstance] = useState<any>(null);
 
   useEffect(() => {
     const bathroomsRef = ref(database, 'bathrooms');
-    
     const unsubscribe = onValue(bathroomsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -54,19 +67,20 @@ export default function BathroomMap() {
           id,
           ...value,
           lat: Number(value.lat),
-          lng: -Math.abs(Number(value.lng))
+          // Ensure lng is negative (if needed for your region)
+          lng: -Math.abs(Number(value.lng)),
         }));
+        console.log("Fetched bathrooms:", bathroomsList);
         setBathrooms(bathroomsList);
       } else {
         setBathrooms([]);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
-  const filterBathrooms = (bathrooms) => {
-    return bathrooms.filter(bathroom => {
+  const filterBathrooms = (bathrooms: any[]) => {
+    return bathrooms.filter((bathroom) => {
       const rating = bathroom.totalRating / bathroom.ratingCount;
       return (
         rating >= filters.minRating &&
@@ -77,13 +91,26 @@ export default function BathroomMap() {
   };
 
   const handleRecenterMap = () => {
-    const map = document.querySelector('.leaflet-container')?._leafletMap;
-    if (map && userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 16);
+    if (mapInstance && userLocation) {
+      mapInstance.flyTo([userLocation.lat, userLocation.lng], 16);
     }
   };
 
-  const handleNavigateClick = (bathroom) => {
+  // This function flies the map to the selected bathroom.
+  const flyToBathroom = (bathroom: any) => {
+    if (mapInstance) {
+      console.log("Flying to bathroom at:", bathroom.lat, bathroom.lng);
+      mapInstance.flyTo([bathroom.lat, bathroom.lng], 16, {
+        duration: 1.5,
+        easeLinearity: 0.25,
+      });
+    } else {
+      console.log("Map instance not available");
+    }
+  };
+
+  // This function opens the navigation modal for the given bathroom.
+  const handleNavigateClick = (bathroom: any) => {
     setSelectedBathroom(bathroom);
     setShowNavigation(true);
   };
@@ -106,36 +133,42 @@ export default function BathroomMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <LocationMarker onLocationFound={setUserLocation} />
+        {/* Set the map instance using our helper component */}
+        <SetMapInstance setMapInstance={setMapInstance} />
         
         {filterBathrooms(bathrooms).map((bathroom) => (
-  <Marker
-    key={bathroom.id}
-    position={[bathroom.lat, bathroom.lng]}
-    icon={toiletIcon}
-  >
-    <Popup>
-      <BathroomCard
-        name={bathroom.name}
-        description={bathroom.description}
-        rating={bathroom.totalRating / bathroom.ratingCount}
-        hasWheelchairAccess={bathroom.hasWheelchairAccess || false}
-        hasChangingTables={bathroom.hasChangingTables || false}
-        isGenderNeutral={bathroom.isGenderNeutral || false}
-        requiresKey={bathroom.requiresKey || false}
-        hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
-        lastReviewed={new Date().toLocaleDateString()}
-        distance={userLocation ? 
-          `${calculateDistance(
-            userLocation.lat, 
-            userLocation.lng, 
-            bathroom.lat, 
-            bathroom.lng
-          ).toFixed(2)}km` : undefined}
-        onNavigateClick={() => handleNavigateClick(bathroom)}
-      />
-    </Popup>
-  </Marker>
-))}
+          <Marker
+            key={bathroom.id}
+            position={[bathroom.lat, bathroom.lng]}
+            icon={toiletIcon}
+          >
+            <Popup>
+              <BathroomCard
+                name={bathroom.name}
+                description={bathroom.description}
+                rating={bathroom.totalRating / bathroom.ratingCount}
+                hasWheelchairAccess={bathroom.hasWheelchairAccess || false}
+                hasChangingTables={bathroom.hasChangingTables || false}
+                isGenderNeutral={bathroom.isGenderNeutral || false}
+                requiresKey={bathroom.requiresKey || false}
+                hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
+                lastReviewed={new Date().toLocaleDateString()}
+                distance={
+                  userLocation
+                    ? `${calculateDistance(
+                        userLocation.lat,
+                        userLocation.lng,
+                        bathroom.lat,
+                        bathroom.lng
+                      ).toFixed(2)}km`
+                    : undefined
+                }
+                // In the Popup, clicking "Directions" opens the navigation modal.
+                onNavigateClick={() => handleNavigateClick(bathroom)}
+              />
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
 
       {/* Control Buttons */}
@@ -164,20 +197,27 @@ export default function BathroomMap() {
         </button>
       )}
 
-      {/* Modals and Overlays */}
+      {/* Sidebar for Bathrooms */}
       <BathroomSidebar
         bathrooms={filterBathrooms(bathrooms)}
         userLocation={userLocation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        // When a card is clicked (outside the Directions button), fly the map to that bathroom.
         onBathroomSelect={(bathroom) => {
+          console.log("Selected bathroom for flyTo:", bathroom);
+          flyToBathroom(bathroom);
+          setIsSidebarOpen(false);
+        }}
+        // When the Directions button is clicked, open the navigation modal.
+        onNavigateClick={(bathroom) => {
           handleNavigateClick(bathroom);
           setIsSidebarOpen(false);
         }}
       />
 
       {showForm && (
-        <AddBathroomForm 
+        <AddBathroomForm
           onClose={() => setShowForm(false)}
           initialLocation={userLocation}
         />

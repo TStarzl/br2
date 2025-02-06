@@ -24,7 +24,12 @@ interface BathroomSidebarProps {
   userLocation: { lat: number; lng: number } | null;
   isOpen: boolean;
   onClose: () => void;
+  /** Called when the user clicks anywhere on the bathroom card (except the Directions button).  
+      In the parent component, this callback should fly the map to the bathroom’s location. */
   onBathroomSelect?: (bathroom: Bathroom) => void;
+  /** Called when the user clicks the Directions button on the card.  
+      In the parent component, this callback should open the navigation modal. */
+  onNavigateClick?: (bathroom: Bathroom) => void;
 }
 
 type SortOption = 'distance' | 'rating' | 'name';
@@ -34,32 +39,23 @@ export function BathroomSidebar({
   userLocation,
   isOpen,
   onClose,
-  onBathroomSelect
+  onBathroomSelect,
+  onNavigateClick,
 }: BathroomSidebarProps) {
   const [sortBy, setSortBy] = useState<SortOption>('distance');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Calculate distances and sort bathrooms
   const sortedAndFilteredBathrooms = useMemo(() => {
     let processed = bathrooms
       .map(bathroom => ({
-        ...bathroom,  // This is correct, but let's be explicit about the properties
-        id: bathroom.id,
-        name: bathroom.name,
-        description: bathroom.description,
+        ...bathroom,
         rating: bathroom.totalRating / bathroom.ratingCount,
-        hasWheelchairAccess: bathroom.hasWheelchairAccess,
-        hasChangingTables: bathroom.hasChangingTables,
-        isGenderNeutral: bathroom.isGenderNeutral,
-        requiresKey: bathroom.requiresKey,
-        hoursOfOperation: bathroom.hoursOfOperation,
-        distance: bathroom.distance
       }))
-      .filter(bathroom => 
+      .filter(bathroom =>
         bathroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         bathroom.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-  
+
     switch (sortBy) {
       case 'distance':
         return processed.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
@@ -76,24 +72,13 @@ export function BathroomSidebar({
     setSortBy(option);
   };
 
+  // Instead of searching for the map instance here, simply call the callback.
   const handleBathroomClick = (bathroom: Bathroom) => {
-    // Get the map instance using Leaflet's ID-based lookup
-    const mapContainer = document.querySelector('.leaflet-container');
-    if (mapContainer) {
-      const map = (window as any).L?.map(mapContainer);
-      if (map) {
-        map.flyTo([bathroom.lat, bathroom.lng], 16, {
-          duration: 1.5,
-          easeLinearity: 0.25
-        });
-      }
-    }
-    // Call the original onBathroomSelect handler
     onBathroomSelect?.(bathroom);
   };
 
   return (
-    <div 
+    <div
       className={`fixed left-0 top-0 h-full bg-white shadow-lg transition-transform duration-300 
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
         z-[1000] w-80 flex flex-col`}
@@ -102,7 +87,7 @@ export function BathroomSidebar({
       <div className="p-4 border-b">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Nearby Bathrooms</h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close sidebar"
@@ -110,7 +95,6 @@ export function BathroomSidebar({
             <X size={20} />
           </button>
         </div>
-
         {/* Search Bar */}
         <div className="relative">
           <input
@@ -120,28 +104,31 @@ export function BathroomSidebar({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={18}
+          />
         </div>
       </div>
 
       {/* Sort Options */}
       <div className="p-2 border-b">
         <div className="flex gap-2">
-          <SortButton 
-            active={sortBy === 'distance'} 
+          <SortButton
+            active={sortBy === 'distance'}
             onClick={() => handleSortChange('distance')}
             disabled={!userLocation}
           >
             Distance
           </SortButton>
-          <SortButton 
-            active={sortBy === 'rating'} 
+          <SortButton
+            active={sortBy === 'rating'}
             onClick={() => handleSortChange('rating')}
           >
             Rating
           </SortButton>
-          <SortButton 
-            active={sortBy === 'name'} 
+          <SortButton
+            active={sortBy === 'name'}
             onClick={() => handleSortChange('name')}
           >
             Name
@@ -161,21 +148,7 @@ export function BathroomSidebar({
               <div
                 key={bathroom.id}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => {
-                  // Get all elements with leaflet-container class
-                  const containers = document.getElementsByClassName('leaflet-container');
-                  // Get the first container and its map instance
-                  const mapContainer = containers[0] as any;
-                  if (mapContainer && mapContainer._leaflet_id) {
-                    const map = (window as any).L.maps[mapContainer._leaflet_id];
-                    if (map) {
-                      map.flyTo([bathroom.lat, bathroom.lng], 16, {
-                        duration: 1.5, // Duration in seconds
-                        easeLinearity: 0.25
-                      });
-                    }
-                  }
-                }}
+                onClick={() => handleBathroomClick(bathroom)}
               >
                 <BathroomCard
                   name={bathroom.name}
@@ -187,13 +160,8 @@ export function BathroomSidebar({
                   requiresKey={bathroom.requiresKey || false}
                   hoursOfOperation={bathroom.hoursOfOperation || '24/7'}
                   lastReviewed={new Date().toLocaleDateString()}
-                  distance={bathroom.distance ? 
-                    `${bathroom.distance.toFixed(2)}km` : undefined
-                  }
-                  onNavigateClick={(e) => {
-                    e.stopPropagation(); // Prevent triggering the parent onClick
-                    onBathroomSelect?.(bathroom);
-                  }}
+                  distance={bathroom.distance ? `${bathroom.distance.toFixed(2)}km` : undefined}
+                  onNavigateClick={() => onNavigateClick?.(bathroom)}
                 />
               </div>
             ))}
@@ -209,12 +177,11 @@ export function BathroomSidebar({
   );
 }
 
-// Sort Button Component
-function SortButton({ 
-  children, 
-  active, 
+function SortButton({
+  children,
+  active,
   onClick,
-  disabled = false
+  disabled = false,
 }: {
   children: React.ReactNode;
   active: boolean;
@@ -228,10 +195,7 @@ function SortButton({
       className={`
         flex-1 px-3 py-1 rounded-md text-sm font-medium
         transition-colors flex items-center justify-center gap-1
-        ${active 
-          ? 'bg-primary text-white' 
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }
+        ${active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
     >
